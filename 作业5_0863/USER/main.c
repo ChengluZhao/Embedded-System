@@ -1,0 +1,41 @@
+#include "stm32f4xx.h"
+#include "usart.h"
+#include "delay.h"
+#include "timer.h"
+#include "led.h"
+#include "lcd1602.h"
+#include "stdio.h"
+#include "string.h"
+
+u16 n=0; //记录中断次数
+char temp[4];
+int main(void)
+{	
+	
+
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置系统中断优先级分组2
+	delay_init(168);		//延时初始化 
+	uart_init(115200);	//串口初始化波特率为115200
+	TIM6_Int_Init(10000-1,8400-1);
+	LED_Init2();
+	LCD_Init();
+	LCD_Display_Str(1,1,"interrupt");
+	LCD_Display_Str(2,1,"n=");
+	TIM_SetCompare3(TIM2,20-1);
+	while(1)
+		{			
+		}
+		
+}
+void TIM6_DAC_IRQHandler(void)
+{
+	if (TIM_GetITStatus(TIM6, TIM_IT_Update) == SET) // 溢出中断
+	{
+		n++;
+		sprintf(temp,"%u",n);
+		printf("中断次数：%u",n);
+		LCD_Display_Str(2,3,temp);
+		LED0=!LED0;
+	}
+	TIM_ClearITPendingBit(TIM6, TIM_IT_Update); // 清除中断标志位
+}
